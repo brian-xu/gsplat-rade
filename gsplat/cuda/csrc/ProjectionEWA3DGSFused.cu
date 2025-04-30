@@ -37,8 +37,8 @@ __global__ void projection_ewa_3dgs_fused_fwd_kernel(
     scalar_t *__restrict__ conics,       // [C, N, 3]
     scalar_t *__restrict__ compensations,// [C, N] optional
     scalar_t *__restrict__ ray_ts,       // [C, N] optional
-    scalar_t *__restrict__ ray_planes,   // [C, N] optional
-    scalar_t *__restrict__ normals       // [C, N] optional
+    scalar_t *__restrict__ ray_planes,   // [C, N, 2] optional
+    scalar_t *__restrict__ normals       // [C, N, 3] optional
 ) {
     // parallelize over C * N.
     uint32_t idx = cg::this_grid().thread_rank();
@@ -252,7 +252,7 @@ void launch_projection_ewa_3dgs_fused_fwd_kernel(
     at::optional<at::Tensor> compensations,// [C, N] optional
     at::Tensor ray_ts,                     // [C, N]
     at::Tensor ray_planes,                 // [C, N, 2]
-    at::Tensor normals,                    // [C, N, 3]
+    at::Tensor normals                     // [C, N, 3]
 ) {
     uint32_t N = means.size(0);    // number of gaussians
     uint32_t C = viewmats.size(0); // number of cameras
@@ -305,7 +305,7 @@ void launch_projection_ewa_3dgs_fused_fwd_kernel(
                         : nullptr,
                     ray_ts.data_ptr<scalar_t>(),
                     ray_planes.data_ptr<scalar_t>(),
-                    normals.data_ptr<scalar_t>(),
+                    normals.data_ptr<scalar_t>()
                 );
         }
     );
@@ -487,7 +487,7 @@ __global__ void projection_ewa_3dgs_fused_bwd_kernel(
 
     // add contribution from v_depths
     v_mean_c.z += v_depths[0];
-    v_mean_c += v_ray_ts[0] * glm::normalize(mean_c);
+    v_mean_c += (float)v_ray_ts[0] * glm::normalize(mean_c);
 
     // vjp: transform Gaussian covariance to camera space
     vec3 v_mean(0.f);
@@ -642,6 +642,9 @@ void launch_projection_ewa_3dgs_fused_bwd_kernel(
                     v_compensations.has_value()
                         ? v_compensations.value().data_ptr<scalar_t>()
                         : nullptr,
+                    v_ray_ts.data_ptr<scalar_t>(),
+                    v_ray_planes.data_ptr<scalar_t>(),
+                    v_normals.data_ptr<scalar_t>(),
                     v_means.data_ptr<scalar_t>(),
                     covars.has_value() ? v_covars.data_ptr<scalar_t>()
                                        : nullptr,

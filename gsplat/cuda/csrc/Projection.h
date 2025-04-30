@@ -20,7 +20,7 @@ void launch_projection_ewa_simple_fwd_kernel(
     at::Tensor means2d, // [C, N, 2]
     at::Tensor covars2d,// [C, N, 2, 2]
     at::Tensor ray_planes, // [C, N, 2]
-    at::Tensor normals, // [C, N, 3]
+    at::Tensor normals  // [C, N, 3]
 );
 void launch_projection_ewa_simple_bwd_kernel(
     // inputs
@@ -33,7 +33,7 @@ void launch_projection_ewa_simple_bwd_kernel(
     const at::Tensor v_means2d,  // [C, N, 2]
     const at::Tensor v_covars2d, // [C, N, 2, 2]
     const at::Tensor v_ray_planes, // [C, N, 2]
-    const at::Tensor v_normals   // [C, N, 3]
+    const at::Tensor v_normals,  // [C, N, 3]
     // outputs
     at::Tensor v_means, // [C, N, 3]
     at::Tensor v_covars // [C, N, 3, 3]
@@ -63,7 +63,7 @@ void launch_projection_ewa_3dgs_fused_fwd_kernel(
     at::optional<at::Tensor> compensations,// [C, N] optional
     at::Tensor ray_ts,                     // [C, N]
     at::Tensor ray_planes,                 // [C, N, 2]
-    at::Tensor normals,                    // [C, N, 3]
+    at::Tensor normals                     // [C, N, 3]
 );
 void launch_projection_ewa_3dgs_fused_bwd_kernel(
     // inputs

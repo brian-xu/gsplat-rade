@@ -387,7 +387,7 @@ void launch_projection_ewa_3dgs_packed_fwd_kernel(
                     ray_planes.has_value() ? ray_planes.value().data_ptr<scalar_t>()
                                         : nullptr,
                     normals.has_value() ? normals.value().data_ptr<scalar_t>()
-                                        : nullptr,
+                                        : nullptr
                 );
         }
     );
@@ -571,7 +571,7 @@ __global__ void projection_ewa_3dgs_packed_bwd_kernel(
 
     // add contribution from v_depths
     v_mean_c.z += v_depths[0];
-    v_mean_c += v_ray_ts[0] * glm::normalize(mean_c);
+    v_mean_c += (float)v_ray_ts[0] * glm::normalize(mean_c);
 
     // vjp: transform Gaussian covariance to camera space
     vec3 v_mean(0.f);

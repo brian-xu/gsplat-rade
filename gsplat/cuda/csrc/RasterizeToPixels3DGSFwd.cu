@@ -124,7 +124,7 @@ __global__ void rasterize_to_pixels_3dgs_fwd_kernel(
     float T = 1.0f;
     // index of most recent gaussian to write to this thread's pixel
     uint32_t cur_idx = 0;
-    uint32_t median_idx = -1;
+    uint32_t median_idx = 0;
 
     // collect and process batches of gaussians
     // each thread loads one gaussian at a time before rasterizing its
@@ -197,7 +197,7 @@ __global__ void rasterize_to_pixels_3dgs_fwd_kernel(
                 normal_out[k] += normal[k] * vis;
             }
 
-            S t_opt = ray_t + glm::dot(delta, ray_plane);
+            scalar_t t_opt = ray_t + glm::dot(delta, ray_plane);
             t_out += t_opt * vis;
             if (T > 0.5)
             {
@@ -309,8 +309,8 @@ void launch_rasterize_to_pixels_3dgs_fwd_kernel(
             colors.data_ptr<float>(),
             opacities.data_ptr<float>(),
             ray_ts.data_ptr<float>(), 
-            reinterpret_cast<vec2<float> *>(ray_planes.data_ptr<float>()) , 
-            reinterpret_cast<vec3<float> *>(normals.data_ptr<float>()),
+            reinterpret_cast<vec2 *>(ray_planes.data_ptr<float>()) , 
+            reinterpret_cast<vec3 *>(normals.data_ptr<float>()),
             backgrounds.has_value() ? backgrounds.value().data_ptr<float>()
                                     : nullptr,
             masks.has_value() ? masks.value().data_ptr<bool>() : nullptr,

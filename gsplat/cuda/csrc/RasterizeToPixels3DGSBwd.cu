@@ -40,6 +40,7 @@ __global__ void rasterize_to_pixels_3dgs_bwd_kernel(
     const scalar_t
         *__restrict__ render_alphas,      // [C, image_height, image_width, 1]
     const int32_t *__restrict__ last_ids, // [C, image_height, image_width]
+    const int32_t *__restrict__ median_ids, // [C, image_height, image_width]
     // grad outputs
     const scalar_t *__restrict__ v_render_colors, // [C, image_height,
                                                   // image_width, CDIM]
@@ -118,7 +119,7 @@ __global__ void rasterize_to_pixels_3dgs_bwd_kernel(
     float *rgbs_batch =
         (float *)&conic_batch[block_size]; // [block_size * CDIM]
     float *ray_t_batch = 
-        reinterpret_cast<float *>(&rgbs_batch[block_size * COLOR_DIM]); // [block_size]
+        reinterpret_cast<float *>(&rgbs_batch[block_size * CDIM]); // [block_size]
     vec2 *ray_plane_batch =
         reinterpret_cast<vec2 *>(&ray_t_batch[block_size]); // [block_size]
     vec3 *normal_batch =

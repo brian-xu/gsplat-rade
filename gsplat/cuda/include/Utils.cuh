@@ -1,6 +1,8 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #pragma once
 
 #include "Common.h"
+#include <glm/gtx/pca.hpp>
 
 #include <cooperative_groups.h>
 #include <cooperative_groups/reduce.h>
@@ -458,8 +460,8 @@ inline __device__ void persp_proj(
 
     float rz = 1.f / z;
     float rz2 = rz * rz;
-    float u = min(lim_x_pos, max(-lim_x_neg, x * rz))
-    float v = min(lim_y_pos, max(-lim_y_neg, y * rz))
+    float u = min(lim_x_pos, max(-lim_x_neg, x * rz));
+    float v = min(lim_y_pos, max(-lim_y_neg, y * rz));
     float tx = z * u;
     float ty = z * v;
 
@@ -480,7 +482,7 @@ inline __device__ void persp_proj(
     auto length = [](float x, float y, float z) { return sqrt(x*x+y*y+z*z); };
     mat3 cov3d_eigen_vector;
 	vec3 cov3d_eigen_value;
-	int D = glm_modification::findEigenvaluesSymReal(cov3d,cov3d_eigen_value,cov3d_eigen_vector);
+	int D = glm::findEigenvaluesSymReal(cov3d,cov3d_eigen_value,cov3d_eigen_vector);
     unsigned int min_id = cov3d_eigen_value[0]>cov3d_eigen_value[1]? (cov3d_eigen_value[1]>cov3d_eigen_value[2]?2:1):(cov3d_eigen_value[0]>cov3d_eigen_value[2]?2:0);
     mat3 cov3d_inv;
 	bool well_conditioned = cov3d_eigen_value[min_id]>1E-8;
@@ -561,8 +563,8 @@ inline __device__ void persp_proj_vjp(
 
     float rz = 1.f / z;
     float rz2 = rz * rz;
-    float u = min(lim_x_pos, max(-lim_x_neg, x * rz))
-    float v = min(lim_y_pos, max(-lim_y_neg, y * rz))
+    float u = min(lim_x_pos, max(-lim_x_neg, x * rz));
+    float v = min(lim_y_pos, max(-lim_y_neg, y * rz));
     float tx = z * u;
     float ty = z * v;
     mat3 v_cov3d_ = {0,0,0,0,0,0,0,0,0};
@@ -581,7 +583,7 @@ inline __device__ void persp_proj_vjp(
     auto length = [](float x, float y, float z) { return sqrt(x*x+y*y+z*z); };
     mat3 cov3d_eigen_vector;
     vec3 cov3d_eigen_value;
-    int D = glm_modification::findEigenvaluesSymReal(cov3d,cov3d_eigen_value,cov3d_eigen_vector);
+    int D = glm::findEigenvaluesSymReal(cov3d,cov3d_eigen_value,cov3d_eigen_vector);
     unsigned int min_id = cov3d_eigen_value[0]>cov3d_eigen_value[1]? (cov3d_eigen_value[1]>cov3d_eigen_value[2]?2:1):(cov3d_eigen_value[0]>cov3d_eigen_value[2]?2:0);
     mat3 cov3d_inv;
     bool well_conditioned = cov3d_eigen_value[min_id]>1E-8;
@@ -670,7 +672,7 @@ inline __device__ void persp_proj_vjp(
             {
                 if(j!=min_id)
                 {
-                    T scale = glm::dot(cov3d_eigen_vector[j], v_eigenvector_min)/min(cov3d_eigen_value[min_id] - cov3d_eigen_value[j], - 0.0000001f);
+                    float scale = glm::dot(cov3d_eigen_vector[j], v_eigenvector_min)/min(cov3d_eigen_value[min_id] - cov3d_eigen_value[j], - 0.0000001f);
                     v_cov3d_ += glm::outerProduct(cov3d_eigen_vector[j] * scale, eigenvector_min);
                 }
             }
@@ -696,7 +698,7 @@ inline __device__ void persp_proj_vjp(
 
     v_cov3d += v_cov3d_;
 
-    vec3 v_mean_3d_ = {0,0,0};
+    vec3 v_mean3d_ = {0,0,0};
     // df/dx = fx * rz * df/dpixx
     // df/dy = fy * rz * df/dpixy
     // df/dz = - fx * mean.x * rz2 * df/dpixx - fy * mean.y * rz2 * df/dpixy
@@ -722,13 +724,13 @@ inline __device__ void persp_proj_vjp(
     float v_mean3d_y = -fy * rz2 * v_J[2][1]  + v_v * rz
                     - v_nJ_T[1][2]*rz2 + (v_nJ_T[2][0]* tx + v_nJ_T[2][2]* z) *(-ty/l3) + v_nJ_T[2][1]*(1/l-ty*ty/l3)
                     + v_l * ty / l;
-    if (x * rz <= lim_x && x * rz >= -lim_x) {
+    if (x * rz <= lim_x_pos && x * rz >= -lim_x_neg) {
         v_mean3d_.x += v_mean3d_x;
     } else {
         // v_mean3d.z += -fx * rz3 * v_J[2][0] * tx;
         v_mean3d_.z += v_mean3d_x * u;
     }
-    if (y * rz <= lim_y && y * rz >= -lim_y) {
+    if (y * rz <= lim_y_pos && y * rz >= -lim_y_neg) {
         v_mean3d_.y += v_mean3d_y;
     } else {
         // v_mean3d.z += -fy * rz3 * v_J[2][1] * ty;
