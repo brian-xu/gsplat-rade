@@ -51,6 +51,7 @@ def rasterization(
     distributed: bool = False,
     camera_model: Literal["pinhole", "ortho", "fisheye"] = "pinhole",
     covars: Optional[Tensor] = None,
+    return_depth_normal: bool = False,
 ) -> Tuple[Tensor, Tensor, Dict]:
     """Rasterize a set of 3D Gaussians (N) to a batch of image planes (C).
 
@@ -599,7 +600,10 @@ def rasterization(
             dim=-1,
         )
 
-    return render_colors, render_alphas, expected_depths, median_depths, expected_normals, meta
+    if return_depth_normal:
+        return render_colors, render_alphas, expected_depths, median_depths, expected_normals, meta
+    else:
+        return render_colors, render_alphas, meta
 
 
 def _rasterization(
